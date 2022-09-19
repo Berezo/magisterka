@@ -7,13 +7,8 @@ Created on Tue Jul 26 13:00:45 2022
 
 from tensorflow import keras
 import numpy as np
-import cv2
-from tensorflow.keras.preprocessing.image import load_img
-
 
 class MapDataset(keras.utils.Sequence):
-    
-
     def __init__(self, image_input_paths, image_mask_paths, batch_size):
         self.image_input_paths = image_input_paths
         self.image_mask_paths = image_mask_paths
@@ -28,10 +23,10 @@ class MapDataset(keras.utils.Sequence):
         idx = index * self.batch_size
         batch_image_input_path = self.image_input_paths[idx : idx + self.batch_size]
         batch_image_mask_path = self.image_mask_paths[idx : idx + self.batch_size]
-        x = load_img(batch_image_input_path[0], target_size=self.image_size)
+        x = keras.preprocessing.image.load_img(batch_image_input_path[0], target_size=self.image_size)
         x = np.expand_dims(x, axis=0)
         x = x.astype('float32') / 255
-        y = load_img(batch_image_mask_path[0], target_size=self.image_size)
+        y = keras.preprocessing.image.load_img(batch_image_mask_path[0], target_size=self.image_size)
         y = np.expand_dims(y, axis=0)
         y = y.astype('float32') / 255
         return x, y
