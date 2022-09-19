@@ -2,8 +2,8 @@
 """
 Color detection test
 """
-from administrativeborders import AdministrativeBorders
-from autoencoder import Autoencoder
+from mapdataset import MapDataset
+# from autoencoder import Autoencoder
 import tensorflow as tf
 import os
 
@@ -23,51 +23,45 @@ def main():
     #     tf.config.experimental.set_memory_growth(physical_devices[0], enable=True)
     #     tf.config.experimental.set_virtual_device_configuration(physical_devices[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4000)])
     
-    # input_dir = "./input"
-    # mask_dir = "./mask"
+    input_dir = "./input"
+    mask_dir = "./mask"
     
-    # image_input_paths = sorted(
-    #     [
-    #         os.path.join(input_dir, fname).replace('\\', '/')
-    #         for fname in os.listdir(input_dir)
-    #         if fname.endswith(".JPG")
-    #     ]
-    # )
-    # image_mask_paths = sorted(
-    #     [
-    #         os.path.join(mask_dir, fname).replace('\\', '/')
-    #         for fname in os.listdir(mask_dir)
-    #         if fname.endswith(".JPG") and not fname.startswith(".")
-    #     ]
-    # )
-    # image_size = (512, 512)
-    # batch_size = 20
-    # num_classes = 1
-    
-    # administrativeborders = AdministrativeBorders(batch_size, image_size, image_input_paths, image_mask_paths)
-    # autoencoder = Autoencoder(image_size, num_classes)
-    
-    # autoencoder.validation_split(batch_size, image_input_paths, image_mask_paths)
-    # autoencoder.train()
-    # autoencoder.generate_prediction()
-    # autoencoder.display_mask(3)
+    image_input_paths = sorted(
+        [
+            os.path.join(input_dir, fname).replace('\\', '/')
+            for fname in os.listdir(input_dir)
+            if fname.endswith(".JPG")
+        ]
+    )
+    # print(image_input_paths)
+    image_mask_paths = sorted(
+        [
+            os.path.join(mask_dir, fname).replace('\\', '/')
+            for fname in os.listdir(mask_dir)
+            if fname.endswith(".JPG") and not fname.startswith(".")
+        ]
+    )
+    # print(image_mask_paths)
+
+    map_dataset = MapDataset(image_input_paths, image_mask_paths, 1)
     
     image_size = 512
     
+    '''Działa'''
     image = cv2.imread('C:/Studia/magisterka/git/magisterka/input/MARP_25_RADOM_1937_0.JPG')
     print(image.shape)
     
-    image_array = np.expand_dims(image, axis=0)
-    print(image_array.shape)
-    image_array = image_array.astype('float32') / 255
+    # image_array = np.expand_dims(image, axis=0)
+    # print(image_array.shape)
+    # image_array = image_array.astype('float32') / 255
     
     
-    mask = cv2.imread('C:/Studia/magisterka/git/magisterka/mask/MARP_25_RADOM_1937_0_MASK.JPG')
+    mask = cv2.imread('C:/Studia/magisterka/git/magisterka/mask/MARP_25_RADOM_1937_0.JPG')
     print(mask.shape)
     
-    mask_array = np.expand_dims(image, axis=0)
-    print(mask_array.shape)
-    mask_array = mask_array.astype('float32') / 255
+    # mask_array = np.expand_dims(image, axis=0)
+    # print(mask_array.shape)
+    # mask_array = mask_array.astype('float32') / 255
     
     model = Sequential()
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same', input_shape=(image_size, image_size, 3)))
@@ -91,9 +85,9 @@ def main():
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])  #Using binary cross entropy loss. Try other losses. 
     model.summary()
     
-    model.fit(image_array, mask_array, epochs=500)
+    model.fit(map_dataset[0][0], map_dataset[0][1], epochs=100)
 
-    prediction = model.predict(image_array)
+    prediction = model.predict(map_dataset[0][0])
     print(prediction.shape)
     print(prediction.max())
     
