@@ -10,6 +10,7 @@ def main():
     image_size = 512
     input_dir = "./input"
     mask_dir = "./mask"
+    predict_dir = "./predict"
     
     image_input_paths = sorted(
         [
@@ -32,6 +33,7 @@ def main():
     model.train()
     model.generate_prediction()
     model.display_mask(0)
+    model.save_prediction(predict_dir)
     
 if __name__ == "__main__":
     main()

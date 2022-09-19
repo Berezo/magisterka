@@ -5,10 +5,11 @@ Created on Tue Jul 26 13:19:30 2022
 @author: dynam
 """
 
+import os
 import random
 import numpy as np
 from tensorflow import keras
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.preprocessing.image import save_img
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, UpSampling2D
 from tensorflow.keras.models import Sequential, Model
 
@@ -54,30 +55,46 @@ class Autoencoder:
         self.train_dataset = MapDataset(image_input_paths_train, image_mask_paths_train, batch_size)
         self.valid_dataset = MapDataset(image_input_paths_valid, image_mask_paths_valid, batch_size)
         
+    def image_name_list(self, path):
+        return sorted(
+            [
+                os.path.join(path, fname[fname.index('M'):]).replace('\\', '/')
+                for fname in self.valid_dataset.image_input_paths
+                if fname.endswith(".JPG")
+            ]
+        )
+        
     
     def train(self):
+        epochs = 10
+        
         self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])  #Using binary cross entropy loss. Try other losses. 
 
         callbacks = [
             keras.callbacks.ModelCheckpoint("oxford_segmentation.h5", save_best_only=True)
         ]
-
-        epochs = 10
+        
         self.model.fit(self.train_dataset, epochs=epochs, validation_data=self.valid_dataset, callbacks=callbacks)
     
     def generate_prediction(self):
         self.predict_dataset = self.model.predict(self.valid_dataset)
     
-    def display_mask(self, i):
+    def display_mask(self, i): #TODO Zmiana na zapis
         """Quick utility to display a model's prediction."""
         plt.figure(figsize=(20, 10))
         plt.subplot(1,3,1)
-        plt.imshow(self.train_dataset[i][0][0,:,:,:])
+        plt.imshow(self.valid_dataset[i][0][0,:,:,:])
         plt.title('Image')
         plt.subplot(1,3,2)
-        plt.imshow(self.train_dataset[i][1][0,:,:,:])
+        plt.imshow(self.valid_dataset[i][1][0,:,:,:])
         plt.title('Original Mask')
         plt.subplot(1,3,3)
         plt.imshow(self.predict_dataset[i,:,:,:])
         plt.title('Predicted Mask')
         plt.show()
+    
+    def save_prediction(self, path):
+        image_names = self.image_name_list(path)
+        for index, prediction in enumerate(self.predict_dataset):
+            keras.preprocessing.image.save_img(image_names[index], prediction)
+            print('Saved {} from {} predictions.'.format(index+1, len(image_names)))
