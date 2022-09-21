@@ -34,6 +34,8 @@ def main():
     model.generate_prediction()
     model.display_mask(0)
     model.save_prediction(predict_dir)
+    # model.copy_projection()
+    
     
 if __name__ == "__main__":
     main()

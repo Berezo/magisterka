@@ -7,6 +7,7 @@ Created on Tue Jul 26 13:00:45 2022
 
 from tensorflow import keras
 import numpy as np
+import cv2
 
 class MapDataset(keras.utils.Sequence):
     def __init__(self, image_input_paths, image_mask_paths, batch_size):
@@ -27,6 +28,7 @@ class MapDataset(keras.utils.Sequence):
         x = np.expand_dims(x, axis=0)
         x = x.astype('float32') / 255
         y = keras.preprocessing.image.load_img(batch_image_mask_path[0], target_size=self.image_size)
+        y = cv2.imread(batch_image_mask_path[0])
         y = np.expand_dims(y, axis=0)
         y = y.astype('float32') / 255
         return x, y

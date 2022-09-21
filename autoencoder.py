@@ -12,10 +12,12 @@ from tensorflow import keras
 from tensorflow.keras.preprocessing.image import save_img
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, UpSampling2D
 from tensorflow.keras.models import Sequential, Model
+from matplotlib import pyplot as plt
+from osgeo import gdal
 
 
 from mapdataset import MapDataset
-from matplotlib import pyplot as plt
+
 
 
 class Autoencoder:
@@ -58,15 +60,15 @@ class Autoencoder:
     def image_name_list(self, path):
         return sorted(
             [
-                os.path.join(path, fname[fname.index('M'):]).replace('\\', '/')
+                os.path.join(path, fname[fname.index('M'):]).replace('\\', '/').replace('.JPG', '.tif')
                 for fname in self.valid_dataset.image_input_paths
                 if fname.endswith(".JPG")
             ]
         )
         
     
-    def train(self):
-        epochs = 10
+    def train(self):#TODO Dodać Epoch jako zmienna
+        epochs = 1
         
         self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])  #Using binary cross entropy loss. Try other losses. 
 
@@ -79,7 +81,7 @@ class Autoencoder:
     def generate_prediction(self):
         self.predict_dataset = self.model.predict(self.valid_dataset)
     
-    def display_mask(self, i): #TODO Zmiana na zapis
+    def display_mask(self, i): 
         """Quick utility to display a model's prediction."""
         plt.figure(figsize=(20, 10))
         plt.subplot(1,3,1)
@@ -98,3 +100,27 @@ class Autoencoder:
         for index, prediction in enumerate(self.predict_dataset):
             keras.preprocessing.image.save_img(image_names[index], prediction)
             print('Saved {} from {} predictions.'.format(index+1, len(image_names)))
+    
+    def copy_projection(self):
+        path = "./input/MARP_25_RADOM_1937_13.JPG"
+        path_2 = "./mask/MARP_25_RADOM_1937_13.tif"
+        raster = gdal.Open(path)
+        projection = raster.GetProjection()
+        geotransform = raster.GetGeoTransform()
+        del raster
+        
+        print(projection)
+        print(geotransform)
+        
+        raster_2 = gdal.Open(path_2, gdal.GA_Update)
+        raster_2.SetGeoTransform(geotransform)
+        raster_2.SetProjection(projection)
+        print(raster_2.GetProjection())
+        print(raster_2.GetGeoTransform())
+    
+        del raster_2
+        
+
+        
+        
+        
