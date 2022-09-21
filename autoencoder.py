@@ -42,7 +42,7 @@ class Autoencoder:
         
         self.model.summary()
     
-    def validation_split(self, image_input_paths, image_mask_paths):
+    def validation_split(self, image_input_paths, image_mask_paths): #TODO stworzenie osobnego datasetu predykcyjnego
         batch_size = 1
         samples_valid = 5 #TODO zmiana liczby na 20% z ilosci obiektow
         seed = random.randint(1000,1500)
@@ -51,11 +51,11 @@ class Autoencoder:
         
         image_input_paths_train = image_input_paths[:-samples_valid]
         image_mask_paths_train = image_mask_paths[:-samples_valid]
-        image_input_paths_valid = image_input_paths[-samples_valid:]
+        self.image_input_paths_valid = image_input_paths[-samples_valid:]
         image_mask_paths_valid = image_mask_paths[-samples_valid:]
         
         self.train_dataset = MapDataset(image_input_paths_train, image_mask_paths_train, batch_size)
-        self.valid_dataset = MapDataset(image_input_paths_valid, image_mask_paths_valid, batch_size)
+        self.valid_dataset = MapDataset(self.image_input_paths_valid, image_mask_paths_valid, batch_size)
         
     def image_name_list(self, path):
         return sorted(
@@ -78,7 +78,7 @@ class Autoencoder:
         
         self.model.fit(self.train_dataset, epochs=epochs, validation_data=self.valid_dataset, callbacks=callbacks)
     
-    def generate_prediction(self):
+    def generate_prediction(self):  #TODO stworzenie osobnego datasetu predykcyjnego
         self.predict_dataset = self.model.predict(self.valid_dataset)
     
     def display_mask(self, i): 
@@ -101,24 +101,19 @@ class Autoencoder:
             keras.preprocessing.image.save_img(image_names[index], prediction)
             print('Saved {} from {} predictions.'.format(index+1, len(image_names)))
     
-    def copy_projection(self):
-        path = "./input/MARP_25_RADOM_1937_13.JPG"
-        path_2 = "./mask/MARP_25_RADOM_1937_13.tif"
-        raster = gdal.Open(path)
-        projection = raster.GetProjection()
-        geotransform = raster.GetGeoTransform()
-        del raster
-        
-        print(projection)
-        print(geotransform)
-        
-        raster_2 = gdal.Open(path_2, gdal.GA_Update)
-        raster_2.SetGeoTransform(geotransform)
-        raster_2.SetProjection(projection)
-        print(raster_2.GetProjection())
-        print(raster_2.GetGeoTransform())
-    
-        del raster_2
+    def copy_spatial_reference(self, path): #TODO działa ale to pierwotny przypadek
+        image_names = self.image_name_list(path)
+        for index, prediction in enumerate(image_names):
+            raster_input = gdal.Open(self.image_input_paths_valid[index], gdal.GA_ReadOnly)
+            projection = raster_input.GetProjection()
+            geotransform = raster_input.GetGeoTransform()
+            del raster_input
+
+            raster_prediction = gdal.Open(prediction, gdal.GA_Update)
+            raster_prediction.SetGeoTransform(geotransform)
+            raster_prediction.SetProjection(projection)
+            print('Copy spatial reference {} from {} predictions.'.format(index+1, len(image_names)))
+            del raster_prediction
         
 
         
