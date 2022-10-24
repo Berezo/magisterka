@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 26 13:00:45 2022
-
-@author: dynam
-"""
 
 from tensorflow import keras
 import numpy as np
@@ -24,11 +19,12 @@ class MapDataset(keras.utils.Sequence):
         idx = index * self.batch_size
         batch_image_input_path = self.image_input_paths[idx : idx + self.batch_size]
         batch_image_mask_path = self.image_mask_paths[idx : idx + self.batch_size]
-        x = keras.preprocessing.image.load_img(batch_image_input_path[0], target_size=self.image_size)
-        x = np.expand_dims(x, axis=0)
-        x = x.astype('float32') / 255
-        y = keras.preprocessing.image.load_img(batch_image_mask_path[0], target_size=self.image_size)
-        y = cv2.imread(batch_image_mask_path[0])
-        y = np.expand_dims(y, axis=0)
-        y = y.astype('float32') / 255
-        return x, y
+        if batch_image_input_path != []:
+            x = keras.preprocessing.image.load_img(batch_image_input_path[0], target_size=self.image_size)
+            x = np.expand_dims(x, axis=0)
+            x = x.astype('float32') / 255
+            y = keras.preprocessing.image.load_img(batch_image_mask_path[0], target_size=self.image_size)
+            y = cv2.imread(batch_image_mask_path[0])
+            y = np.expand_dims(y, axis=0)
+            y = y.astype('float32') / 255
+            return x, y
